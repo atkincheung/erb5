@@ -25,7 +25,7 @@ def listing(request, listing_id):
     return render(request, 'listings/listing.html',context)
 
 def search(request):
-    queryset_list = Listing.objects.order_by('-list_date')
+    queryset_list = Listing.objects.order_by('-list_date').filter(is_published=True)
     if 'keywords' in request.GET:
         keywords = request.GET['keywords']
         if keywords:
@@ -46,11 +46,18 @@ def search(request):
         bedrooms = request.GET['bedrooms']
         if bedrooms:
             queryset_list = queryset_list.filter(bedrooms__lte=bedrooms)
+    paginator=Paginator(queryset_list,3) 
+    page = request.GET.get('page')
+    paged_listings = paginator.get_page(page)  
+    values = request.GET.copy()  
+    if 'page' in values:
+        del values["page"]    
     context = {
         'price_choices': price_choices,
         'bedroom_choices': bedroom_choices,
         'district_choices': district_choices,
-        'listings': queryset_list,
-        'values': request.GET
+       # 'listings': queryset_list,
+        'listings': paged_listings,         
+        'values': values
     }
     return render(request, 'listings/search.html', context)
